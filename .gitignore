@@ -50,3 +50,6 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+.idea/COP3402-VM.iml
+.idea/modules.xml
+.idea/vcs.xml
