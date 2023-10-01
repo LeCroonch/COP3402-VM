@@ -1,4 +1,4 @@
-	# $Id: vm_test1.asm,v 1.4 2023/09/26 17:49:38 leavens Exp leavens $
+	# $Id: vm_test1.asm,v 1.4 2023/09/26 17:49:38 leavens Exp $
 	.text start
 start:	STRA
 	ADDI $0, $t0, 1   # $t0 is 1

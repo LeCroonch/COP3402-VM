@@ -1,4 +1,4 @@
-/* $Id: bof.h,v 1.12 2023/09/26 17:49:38 leavens Exp leavens $ */
+/* $Id: bof.h,v 1.12 2023/09/26 17:49:38 leavens Exp $ */
 // Binary Object File Format (for the SRM)
 #ifndef _BOF_H
 #define _BOF_H
