@@ -2,6 +2,8 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include "bof.h"
+#include "instruction.h"
 #include "regname.h"
 #include "machine_types.h"
 #include "instruction.h"
@@ -28,10 +30,10 @@ int main(int argc, char * argv[]){
           
           BOFHeader bh = bof_read_header(bf);
           
-          for(PC = 0; PC < bh.text_length/BYTES_PER_WORD; PC++){
+          for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
 
                bin_instr_t bi = instruction_read(bf);     
-               memory.instrs[PC] = bi;
+               memory.instrs[i] = bi;
 
           }
 
@@ -42,15 +44,26 @@ int main(int argc, char * argv[]){
           }
           
           for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
-               instruction_print( , , memory.instrs[i]);
+
+               printf("a%d;\t%s", PC, instruction_assembly_form(memory.instrs[i]));
+               PC = PC + 4;
           }
 
-
+          exit(0);
      } else {
 
-      
+          BOFFILE bf = bof_read_open(argv[1]);
 
+          BOFHeader bh = bof_read_header(bf);
+
+          
      }
 
     
+}
+
+void instruction(int PC){
+
+
+     PC = PC + 4;
 }
