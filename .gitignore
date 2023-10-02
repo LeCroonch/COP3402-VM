@@ -53,3 +53,4 @@ dkms.conf
 .idea/COP3402-VM.iml
 .idea/modules.xml
 .idea/vcs.xml
+.vscode/tasks.json
