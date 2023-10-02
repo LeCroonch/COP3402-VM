@@ -46,18 +46,13 @@ int main(int argc, char * argv[]){
      } else {
 
          storeInstrs(&bh, argv[1]);
- 
-          BOFFILE bf = bof_read_open(argv[1]);
 
-          BOFHeader bh = bof_read_header(bf);
-
-       
-          for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
+         for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
      
                bin_instr_t bi = instruction_read(bf);
                memory.instrs[i] = bi;
                instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
-          }
+         }
                
      }
 
@@ -118,43 +113,41 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                
               case ADD_F:
                   GPR[instr.reg.rd] = GPR[instr.reg.rs] + GPR[instr.reg.rt];
-               break;
-               case SUB_F:
-                   GPR[instr.reg.rd] = GPR[instr.reg.rs] - GPR[instr.reg.rt];
-               break;
-               case MUL_F:
-                    result = (GPR[instr.reg.rs]) * (GPR[instr.reg.rt]);
-                    HI = result >> 32;
-                    LO = result & 0xFFFFFFFF;
-                    
-               break;
-               case DIV_F:
-                    HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
-                    LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
-                   
-               break;
-               case MFHI_F:
+              break;
+              case SUB_F:
+                  GPR[instr.reg.rd] = GPR[instr.reg.rs] - GPR[instr.reg.rt];
+              break;
+              case MUL_F:
+                  result = (GPR[instr.reg.rs]) * (GPR[instr.reg.rt]);
+                  HI = result >> 32;
+                  LO = result & 0xFFFFFFFF;
+              break;
 
-               break;
-               case MFLO_F:
-               break;
-               case AND_F:
-               break;
-               case BOR_F:
-               break;
-               case NOR_F:
-               break;
-               case XOR_F:
-               break;
-               case SLL_F:
-               break;
-               case SRL_F:
-               break;
-               case JR_F:
-               break;
-               case SYSCALL_F:
-               //table 6 System Calls
-               break;
+              case DIV_F:
+                  HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
+                  LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
+              break;
+              case MFHI_F:
+              break;
+              case MFLO_F:
+              break;
+              case AND_F:
+              break;
+              case BOR_F:
+              break;
+              case NOR_F:
+              break;
+              case XOR_F:
+              break;
+              case SLL_F:
+              break;
+              case SRL_F:
+              break;
+              case JR_F:
+              break;
+              case SYSCALL_F:
+                  //table 6 System Calls
+              break;
 
           }
           case immed_instr_type:
