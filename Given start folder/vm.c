@@ -95,12 +95,17 @@ const char *instructionCycle(bin_instr_t instr){
                   register[instr.reg.rd] = register[instr.reg.rs] + register[instr.reg.rt];
                break;
                case SUB_F:
+                   register[instr.reg.rd] = register[instr.reg.rs] - register[instr.reg.rt];
                break;
                case MUL_F:
+                   // HI LO multiplication implementation
+
                break;
                case DIV_F:
+                   //same but for division
                break;
                case MFHI_F:
+
                break;
                case MFLO_F:
                break;
