@@ -48,9 +48,7 @@ int main(int argc, char * argv[]){
          storeInstrs(&bh, argv[1]);
 
          for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
-     
-               bin_instr_t bi = instruction_read(bf);
-               memory.instrs[i] = bi;
+
                instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
          }
                
@@ -97,21 +95,32 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
     }
 }
 
+/*
+void printElse(){
+    printf("%9s")
+    for(int i = 0; i < 32; i++){
+        strcmp(regname_get(i), )
+    }
+}
 
+*/
 const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR){
      PC += 4;
      char *buf;
-     char * name;
      unsigned result;
      instr_type it = instruction_type(instr);
      printf("%d\n", it);
      switch(it){
           case syscall_instr_type:
+
           break;
           case reg_instr_type:
           switch (instr.reg.func){
                
               case ADD_F:
+                  printf(instr.reg.rd);
+                  printf(instr.reg.rs);
+                  printf(instr.reg.rt);
                   GPR[instr.reg.rd] = GPR[instr.reg.rs] + GPR[instr.reg.rt];
               break;
               case SUB_F:
@@ -151,11 +160,54 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
 
           }
           case immed_instr_type:
+              switch (instr.immed.op){
+                  case REG_O:
+                      break;;
+                  case ADDI_O:
+                      GPR[instr.immed.rt] = GPR[instr.immed.rs] + machine_types_sgnExt(instr.immed.immed);
+                  break;
+                  case ANDI_O:
+                      break;
+                  case BORI_O:
+                      break;
+                  case XORI_O:
+                      break;
+                  case BEQ_O:
+                      break;
+                  case BGEZ_O:
+                      break;
+                  case BGTZ_O:
+                      break;
+                  case BLEZ_O:
+                      break;
+                  case BLTZ_O:
+                      break;
+                  case BNE_O:
+                      break;
+                  case LBU_O:
+                      break;
+                  case LW_O:
+                      break;
+                  case SB_O:
+                      break;
+                  case SW_O:
+                      break;
+                  case JMP_O:
+                      break;
+                  case JAL_O:
+                      break;
+              }
           break;
           case jump_instr_type:
+              switch(instr.jump.op){
+                  case JMP_O:
+                      break;
+                  case JAL_O:
+                      break;
+              }
           break;
           default:
-          bail_with_error("Uknown instruction type (%d) in instruction_assembly_form!", it);
+          bail_with_error("Unknown instruction type (%d) in instruction_assembly_form!", it);
 
           return buf;
      }
