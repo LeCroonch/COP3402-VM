@@ -123,6 +123,7 @@ const char *instructionCycle(bin_instr_t instr){
                case JR_F:
                break;
                case SYSCALL_F:
+               //table 6 System Calls
                break;
 
           }
