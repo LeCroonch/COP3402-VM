@@ -96,9 +96,11 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
 }
 
 
-const char *instructionCycle(bin_instr_t instr){
+const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO){
+     PC += 4;
      char *buf;
      char * name;
+     unsigned result;
      instr_type it = instruction_type(instr);
      printf("%d\n", it);
      switch(it){
@@ -108,17 +110,21 @@ const char *instructionCycle(bin_instr_t instr){
           switch (instr.reg.func){
                
               case ADD_F:
-                  //register[instr.reg.rd] = register[instr.reg.rs] + register[instr.reg.rt];
+                  GPR[instr.reg.rd] = GPR[instr.reg.rs] + GPR[instr.reg.rt];
                break;
                case SUB_F:
-                   //register[instr.reg.rd] = register[instr.reg.rs] - register[instr.reg.rt];
+                   GPR[instr.reg.rd] = GPR[instr.reg.rs] - GPR[instr.reg.rt];
                break;
                case MUL_F:
-                   // HI LO multiplication implementation
-
+                    result = (GPR[instr.reg.rs]) * (GPR[instr.reg.rt]);
+                    HI = result >> 32;
+                    LO = result & 0xFFFFFFFF;
+                    
                break;
                case DIV_F:
-                   //same but for division
+                    HI = GPR[instr.reg.rs] % GPR[instr.reg.rt]
+                    LO = GPR[instr.reg.rs] / GPR[instr.reg.rt]
+                   
                break;
                case MFHI_F:
 
