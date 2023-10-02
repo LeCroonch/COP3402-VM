@@ -154,30 +154,57 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
               break;
 
               case DIV_F:
-                  HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
-                  LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
+                   HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
+                   LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
               break;
               case MFHI_F:
+                   GPR[instr.reg.rd] = HI;
               break;
               case MFLO_F:
+                   GPR[instr.reg.rd] = LO:
               break;
               case AND_F:
+                   GPR[instr.reg.rd] = (GPR[instr.reg.rs]) && (GPR[instr.reg.rt]);
               break;
               case BOR_F:
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) || (GPR[instr.reg.rt)]));
               break;
               case NOR_F:
+                   GPR[instr.reg.rd] = !((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]))
               break;
               case XOR_F:
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) ^ (GPR[instr.reg.rt])); 
               break;
               case SLL_F:
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) << (GPR[instr.reg.shift]));
               break;
               case SRL_F:
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]))
               break;
               case JR_F:
+                   PC = GPR[instr.reg.rs];
               break;
               case SYSCALL_F:
+                   switch (instr.reg.op){
+                        case EXIT_:
+                        exit(0);
+                        break;
+                        case PSTR_:
 
-                  //table 6 System Calls
+                        break;
+                        case PCH_:
+
+                        break;
+                        case RCH_:
+
+                        break;
+                        case STRA_:
+
+                        break;
+                        case NOTR_:
+
+                        break;
+                   }
               break;
 
           }
