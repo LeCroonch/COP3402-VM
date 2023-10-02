@@ -22,6 +22,7 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
 void storeInstrs(BOFHeader* bh0,char* fileName);
 void storeData(char* fileName);
 void printData(BOFHeader* bh);
+void printElse(int* PC, BOFHeader* bh, word_type* GPR);
 
 int main(int argc, char * argv[]){
 
@@ -48,8 +49,8 @@ int main(int argc, char * argv[]){
          storeInstrs(&bh, argv[1]);
 
          for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
-
-               instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
+             instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
+             printElse(&PC, &bh, &GPR);
          }
                
      }
@@ -95,15 +96,18 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
     }
 }
 
-/*
-void printElse(){
-    printf("%9s")
+void printElse(int* PC, BOFHeader* bh, word_type* GPR){
+    printf("%8s: %d\n", "PC", *PC);
     for(int i = 0; i < 32; i++){
-        strcmp(regname_get(i), )
+        if(i != 0 && i % 6 == 0){
+            printf("\n");
+        }
+        printf("GPR[%-3s]: %-6d", regname_get(i), GPR[i]);
     }
+    printData(bh);
+    printf("==> addr: %-5u: %s\n", *PC, instruction_assembly_form(memory.instrs[(*PC % 4)]));
 }
 
-*/
 const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR){
      *PC += 4;
      char *buf;
@@ -112,6 +116,7 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
      printf("%d\n", it);
      switch(it){
           case syscall_instr_type:
+<<<<<<< Updated upstream
             switch (instr.syscall.code){
 
                 case exit_sc:
@@ -134,14 +139,16 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                 break;
 
             }
+=======
+              switch (instr.syscall.code){
+
+              }
+>>>>>>> Stashed changes
           break;
           case reg_instr_type:
           switch (instr.reg.func){
                
               case ADD_F:
-                  printf(instr.reg.rd);
-                  printf(instr.reg.rs);
-                  printf(instr.reg.rt);
                   GPR[instr.reg.rd] = GPR[instr.reg.rs] + GPR[instr.reg.rt];
               break;
               case SUB_F:
