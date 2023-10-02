@@ -122,8 +122,8 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO){
                     
                break;
                case DIV_F:
-                    HI = GPR[instr.reg.rs] % GPR[instr.reg.rt]
-                    LO = GPR[instr.reg.rs] / GPR[instr.reg.rt]
+                    HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
+                    LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
                    
                break;
                case MFHI_F:
