@@ -116,7 +116,6 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
      printf("%d\n", it);
      switch(it){
           case syscall_instr_type:
-<<<<<<< Updated upstream
             switch (instr.syscall.code){
 
                 case exit_sc:
@@ -139,11 +138,6 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                 break;
 
             }
-=======
-              switch (instr.syscall.code){
-
-              }
->>>>>>> Stashed changes
           break;
           case reg_instr_type:
           switch (instr.reg.func){
@@ -168,16 +162,16 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                    GPR[instr.reg.rd] = HI;
               break;
               case MFLO_F:
-                   GPR[instr.reg.rd] = LO:
+                   GPR[instr.reg.rd] = LO;
               break;
               case AND_F:
                    GPR[instr.reg.rd] = (GPR[instr.reg.rs]) && (GPR[instr.reg.rt]);
               break;
               case BOR_F:
-                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) || (GPR[instr.reg.rt)]));
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]));
               break;
               case NOR_F:
-                   GPR[instr.reg.rd] = !((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]))
+                   GPR[instr.reg.rd] = !((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]));
               break;
               case XOR_F:
                    GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) ^ (GPR[instr.reg.rt])); 
@@ -186,29 +180,29 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                    GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) << (GPR[instr.reg.shift]));
               break;
               case SRL_F:
-                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]))
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]));
               break;
               case JR_F:
                    PC = GPR[instr.reg.rs];
               break;
               case SYSCALL_F:
                    switch (instr.reg.op){
-                        case EXIT_:
+                        case exit_sc:
                         exit(0);
                         break;
-                        case PSTR_:
+                        case print_str_sc:
 
                         break;
-                        case PCH_:
+                        case print_char_sc:
 
                         break;
-                        case RCH_:
+                        case read_char_sc:
 
                         break;
-                        case STRA_:
+                        case start_tracing_sc:
 
                         break;
-                        case NOTR_:
+                        case stop_tracing_sc:
 
                         break;
                    }
