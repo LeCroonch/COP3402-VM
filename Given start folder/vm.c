@@ -18,6 +18,8 @@ static union mem_u
      bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
+const char *instructionCycle(bin_instr_t instr);
+void storeInstrs(memory* mem, char* fileName);
 
 int main(int argc, char * argv[]){
 
@@ -32,20 +34,17 @@ int main(int argc, char * argv[]){
           BOFFILE bf = bof_read_open(fileName);
           
           BOFHeader bh = bof_read_header(bf);
-          
+          memory mem1;
           printf("%-5s: %s\n", "Addr", "Instruction");
           for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
       
                bin_instr_t bi = instruction_read(bf);     
-               memory.instrs[i] = bi;
+               mem1.instrs[i] = bi;
                
-               printf("   %d %s\n", PC, instruction_assembly_form(memory.instrs[i]));
+               printf("%-5u: %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
           }
-          
-  
 
-     
           
           int currAddr = bh.data_start_address;
           
@@ -62,9 +61,6 @@ int main(int argc, char * argv[]){
                currAddr = currAddr + 4;               
           }
 
-          
-
-         
      } else {
  
           BOFFILE bf = bof_read_open(argv[1]);
@@ -77,7 +73,6 @@ int main(int argc, char * argv[]){
                bin_instr_t bi = instruction_read(bf);
                memory.instrs[i] = bi;
                instructionCycle(memory.instrs[i]);
-
           }
                
      }
@@ -96,7 +91,8 @@ const char *instructionCycle(bin_instr_t instr){
           case reg_instr_type:
           switch (instr.reg.func){
                
-               case ADD_F:
+              case ADD_F:
+                  register[instr.reg.rd] = register[instr.reg.rs] + register[instr.reg.rt];
                break;
                case SUB_F:
                break;
