@@ -19,49 +19,37 @@ static union mem_u
 } memory;
 
 const char *instructionCycle(bin_instr_t instr);
-void storeInstrs(memory* mem, char* fileName);
+void storeInstrs(BOFHeader* bh0,char* fileName);
+void storeData(char* fileName);
 
 int main(int argc, char * argv[]){
 
      int PC = 0;
-     
+    BOFHeader bh;
      word_type reg[NUM_REGISTERS];
  
      if(strcmp(argv[1], "-p") == 0){
 
-          char* fileName = argv[2];
- 
-          BOFFILE bf = bof_read_open(fileName);
-          
-          BOFHeader bh = bof_read_header(bf);
-          memory mem1;
+         storeInstrs(&bh ,argv[2]);
+
           printf("%-5s: %s\n", "Addr", "Instruction");
           for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
-      
-               bin_instr_t bi = instruction_read(bf);     
-               mem1.instrs[i] = bi;
-               
                printf("%-5u: %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
           }
 
-          
           int currAddr = bh.data_start_address;
           
           for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i+4){
 
                printf("%-5u: %d", currAddr, memory.words[currAddr/BYTES_PER_WORD]);
-
-               if(memory.bytes[i] == 0){
-                    printf(" ...\n");
-                    break;
-
-               }
                
                currAddr = currAddr + 4;               
           }
 
      } else {
+
+         storeInstrs(&bh, argv[1]);
  
           BOFFILE bf = bof_read_open(argv[1]);
 
@@ -80,6 +68,26 @@ int main(int argc, char * argv[]){
     
 }
 
+void storeInstrs(BOFHeader* bhptr,char* fileName){
+    BOFFILE bf = bof_read_open(fileName);
+    BOFHeader bh = bof_read_header(bf);
+    *bhptr = bh;
+
+    for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
+        bin_instr_t bi = instruction_read(bf);
+        memory.instrs[i] = bi;
+    }
+}
+
+void storeData(char* fileName){
+    BOFFILE bf = bof_read_open(fileName);
+    BOFHeader bh = bof_read_header(bf);
+
+    for(int i = 0; i <= bh.data_length/BYTES_PER_WORD; i++){
+        memory.words[bh.data_start_address + i] = bof_read_word(bf);
+    }
+}
+
 const char *instructionCycle(bin_instr_t instr){
      char *buf;
      char * name;
@@ -92,10 +100,10 @@ const char *instructionCycle(bin_instr_t instr){
           switch (instr.reg.func){
                
               case ADD_F:
-                  register[instr.reg.rd] = register[instr.reg.rs] + register[instr.reg.rt];
+                  //register[instr.reg.rd] = register[instr.reg.rs] + register[instr.reg.rt];
                break;
                case SUB_F:
-                   register[instr.reg.rd] = register[instr.reg.rs] - register[instr.reg.rt];
+                   //register[instr.reg.rd] = register[instr.reg.rs] - register[instr.reg.rt];
                break;
                case MUL_F:
                    // HI LO multiplication implementation
