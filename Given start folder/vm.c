@@ -18,46 +18,30 @@ static union mem_u
      bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
-const char *instructionCycle(bin_instr_t instr);
+const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR);
 void storeInstrs(BOFHeader* bh0,char* fileName);
 void storeData(char* fileName);
+void printData(BOFHeader* bh);
 
 int main(int argc, char * argv[]){
 
      int PC = 0;
      BOFHeader bh;
-     word_type reg[NUM_REGISTERS];
+     word_type GPR[NUM_REGISTERS];
+     int HI = 0;
+     int LO = 0;
  
      if(strcmp(argv[1], "-p") == 0){
 
          storeInstrs(&bh ,argv[2]);
 
-          printf("%4s %s\n", "Addr", "Instruction");
-          for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
+         printf("%4s %s\n", "Addr", "Instruction");
+         for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
                printf("%4d %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
-          }
+         }
+         printData(&bh);
 
-         bool noDots = true;
-          int currAdd;
-          for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i++){
-              if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
-                  printf("\n");
-              }
-              if(memory.words[i] != 0){
-                  currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
-                  printf("%8d: %-4d", currAdd, memory.words[i]);
-              }else if(memory.words[i] == 0){
-                  currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
-                  if(noDots){
-                      printf("%8d: %-4d", currAdd, 0);
-                      printf("\t...\n");
-                      noDots = false;
-                  }else{
-                      break;
-                  }
-              }
-          }
 
      } else {
 
@@ -72,12 +56,35 @@ int main(int argc, char * argv[]){
      
                bin_instr_t bi = instruction_read(bf);
                memory.instrs[i] = bi;
-               instructionCycle(memory.instrs[i]);
+               instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
           }
                
      }
 
 
+}
+
+void printData(BOFHeader* bh){
+    bool noDots = true;
+    int currAdd;
+    for(int i = bh->data_start_address; i < bh->stack_bottom_addr; i++){
+        if((i - bh->data_start_address) != 0 && (i - bh->data_start_address) % 5 == 0){
+            printf("\n");
+        }
+        if(memory.words[i] != 0){
+            currAdd = bh->data_start_address + (4 * (i-bh->data_start_address));
+            printf("%8d: %-4d", currAdd, memory.words[i]);
+        }else if(memory.words[i] == 0){
+            currAdd = bh->data_start_address + (4 * (i-bh->data_start_address));
+            if(noDots){
+                printf("%8d: %-4d", currAdd, 0);
+                printf("\t...\n");
+                noDots = false;
+            }else{
+                break;
+            }
+        }
+    }
 }
 
 void storeInstrs(BOFHeader* bhptr,char* fileName){
@@ -96,7 +103,7 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
 }
 
 
-const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO){
+const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR){
      PC += 4;
      char *buf;
      char * name;
