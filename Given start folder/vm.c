@@ -25,26 +25,38 @@ void storeData(char* fileName);
 int main(int argc, char * argv[]){
 
      int PC = 0;
-    BOFHeader bh;
+     BOFHeader bh;
      word_type reg[NUM_REGISTERS];
  
      if(strcmp(argv[1], "-p") == 0){
 
          storeInstrs(&bh ,argv[2]);
 
-          printf("%-5s: %s\n", "Addr", "Instruction");
+          printf("%4s %s\n", "Addr", "Instruction");
           for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
-               printf("%-5u: %s\n", PC, instruction_assembly_form(memory.instrs[i]));
+               printf("%4d %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
           }
 
-          int currAddr = bh.data_start_address;
-          
-          for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i+4){
-
-               printf("%-5u: %d", currAddr, memory.words[currAddr/BYTES_PER_WORD]);
-               
-               currAddr = currAddr + 4;               
+         bool noDots = true;
+          int currAdd;
+          for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i++){
+              if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
+                  printf("\n");
+              }
+              if(memory.words[i] != 0){
+                  currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
+                  printf("%8d: %-4d", currAdd, memory.words[i]);
+              }else if(memory.words[i] == 0){
+                  currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
+                  if(noDots){
+                      printf("%8d: %-4d", currAdd, 0);
+                      printf("\t...\n");
+                      noDots = false;
+                  }else{
+                      break;
+                  }
+              }
           }
 
      } else {
@@ -65,7 +77,7 @@ int main(int argc, char * argv[]){
                
      }
 
-    
+
 }
 
 void storeInstrs(BOFHeader* bhptr,char* fileName){
@@ -77,16 +89,12 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
         bin_instr_t bi = instruction_read(bf);
         memory.instrs[i] = bi;
     }
-}
 
-void storeData(char* fileName){
-    BOFFILE bf = bof_read_open(fileName);
-    BOFHeader bh = bof_read_header(bf);
-
-    for(int i = 0; i <= bh.data_length/BYTES_PER_WORD; i++){
+    for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
         memory.words[bh.data_start_address + i] = bof_read_word(bf);
     }
 }
+
 
 const char *instructionCycle(bin_instr_t instr){
      char *buf;
