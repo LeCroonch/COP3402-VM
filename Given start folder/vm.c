@@ -105,14 +105,35 @@ void printElse(){
 
 */
 const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR){
-     PC += 4;
+     *PC += 4;
      char *buf;
      unsigned result;
      instr_type it = instruction_type(instr);
      printf("%d\n", it);
      switch(it){
           case syscall_instr_type:
+            switch (instr.syscall.code){
 
+                case exit_sc:
+                    exit(0);
+                break;
+                case print_str_sc:
+                    
+                break;
+                case print_char_sc:
+                    GPR[2] = fputc(GPR[4], stdout);
+                break;
+                case read_char_sc:
+                    GPR[2] = getc(stdin);
+                break;
+                case start_tracing_sc:
+
+                break;
+                case stop_tracing_sc:
+                
+                break;
+
+            }
           break;
           case reg_instr_type:
           switch (instr.reg.func){
@@ -155,6 +176,7 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
               case JR_F:
               break;
               case SYSCALL_F:
+
                   //table 6 System Calls
               break;
 
@@ -164,45 +186,69 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                   case REG_O:
                       break;;
                   case ADDI_O:
-                      GPR[instr.immed.rt] = GPR[instr.immed.rs] + machine_types_sgnExt(instr.immed.immed);
+                    GPR[instr.immed.rt] = GPR[instr.immed.rs] + machine_types_sgnExt(instr.immed.immed);
                   break;
                   case ANDI_O:
+                    GPR[instr.immed.rt] = GPR[instr.immed.rs] & machine_types_zeroExt(instr.immed.immed);
                       break;
                   case BORI_O:
+                    GPR[instr.immed.rt] = GPR[instr.immed.rs] | machine_types_zeroExt(instr.immed.immed);
                       break;
                   case XORI_O:
+                    GPR[instr.immed.rt] = GPR[instr.immed.rs] ^ machine_types_zeroExt(instr.immed.immed);
                       break;
                   case BEQ_O:
+                    if(GPR[instr.immed.rs] == GPR[instr.immed.rt]){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case BGEZ_O:
+                    if(GPR[instr.immed.rs] >= 0){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case BGTZ_O:
+                    if(GPR[instr.immed.rs] > 0){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case BLEZ_O:
+                    if(GPR[instr.immed.rs] <= 0){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case BLTZ_O:
+                    if(GPR[instr.immed.rs] < 0){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case BNE_O:
+                    if(GPR[instr.immed.rs] != GPR[instr.immed.rt]){
+                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                    }
                       break;
                   case LBU_O:
+                    GPR[instr.immed.rt] = machine_types_zeroExt(memory.bytes[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)]);
                       break;
                   case LW_O:
+                    GPR[instr.immed.rt] = memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)];
                       break;
                   case SB_O:
+                    memory.bytes[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)] = GPR[instr.immed.rt];
                       break;
                   case SW_O:
-                      break;
-                  case JMP_O:
-                      break;
-                  case JAL_O:
+                    memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)] = GPR[instr.immed.rt];
                       break;
               }
           break;
           case jump_instr_type:
               switch(instr.jump.op){
                   case JMP_O:
+                    PC = machine_types_formAddress(PC, instr.jump.addr);
                       break;
                   case JAL_O:
+                    GPR[31] = PC;
+                    PC = machine_types_formAddress(PC, instr.jump.addr);
                       break;
               }
           break;
