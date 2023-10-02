@@ -55,3 +55,4 @@ dkms.conf
 .idea/vcs.xml
 .vscode/tasks.json
 .vscode/settings.json
+.idea/.name
