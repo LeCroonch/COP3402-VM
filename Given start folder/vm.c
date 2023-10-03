@@ -115,7 +115,7 @@ void initGPR(BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
 
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS]){
      *PC += 4;
-     int result;
+     int64_t result;
      instr_type it = instruction_type(instr);
      printf("%d\n", it);
      switch(it){
