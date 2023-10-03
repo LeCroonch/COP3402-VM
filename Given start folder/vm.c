@@ -18,14 +18,14 @@ static union mem_u
      bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
-void printData(BOFHeader* bh);
-void storeInstrs(BOFHeader* bh0,char* fileName);
-void printElse(int* PC, BOFHeader* bh, word_type GPR[NUM_REGISTERS]);
-void initGPR(BOFHeader* bh, word_type GPR[NUM_REGISTERS]);
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS]);
+void printData(BOFHeader bh);
+void storeInstrs(BOFHeader* bh0, char* fileName);
+void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO);
+void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace);
 
 int main(int argc, char * argv[]){
-
+    int trace = 1;
      int PC = 0;
      BOFHeader bh;
      word_type GPR[NUM_REGISTERS];
@@ -41,33 +41,36 @@ int main(int argc, char * argv[]){
                printf("%4d %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
          }
-         printData(&bh);
+         printData(bh);
 
 
      } else {
 
          storeInstrs(&bh, argv[1]);
-         initGPR(&bh, GPR);
+         initGPR(bh, GPR);
 
          for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
-             printElse(&PC, &bh, GPR);
-             instructionCycle(memory.instrs[i], &PC, &HI, &LO, GPR);
+             if(trace == 1)
+             {
+                 printElse(PC, bh, GPR, HI, LO);
+             }
+             instructionCycle(memory.instrs[i], &PC, &HI, &LO, GPR, &trace);
          }
      }
 }
 
-void printData(BOFHeader* bh){
+void printData(BOFHeader bh){
     bool noDots = true;
     int currAdd;
-    for(int i = bh->data_start_address; i < bh->stack_bottom_addr; i++){
-        if((i - bh->data_start_address) != 0 && (i - bh->data_start_address) % 5 == 0){
+    for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i++){
+        if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
             printf("\n");
         }
         if(memory.words[i] != 0){
-            currAdd = bh->data_start_address + (4 * (i-bh->data_start_address));
+            currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
             printf("%8d: %-4d", currAdd, memory.words[i]);
         }else if(memory.words[i] == 0){
-            currAdd = bh->data_start_address + (4 * (i-bh->data_start_address));
+            currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
             if(noDots){
                 printf("%8d: %-4d", currAdd, 0);
                 printf("\t...\n");
@@ -79,7 +82,7 @@ void printData(BOFHeader* bh){
     }
 }
 
-void storeInstrs(BOFHeader* bhptr,char* fileName){
+void storeInstrs(BOFHeader* bhptr, char* fileName){
     BOFFILE bf = bof_read_open(fileName);
     BOFHeader bh = bof_read_header(bf);
     *bhptr = bh;
@@ -94,8 +97,14 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
     }
 }
 
-void printElse(int* PC, BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
-    printf("%8s: %d\n", "PC", *PC);
+void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO){
+    if(HI > 0 || LO > 0)
+    {
+        printf("%8s: %d %8s: %d %8s: %d\n", "PC", PC, "HI", HI, "LO", LO);
+    }else{
+        printf("%8s: %d\n", "PC", PC);
+    }
+
     for(int i = 0; i < 32; i++){
         if(i != 0 && i % 6 == 0){
             printf("\n");
@@ -104,29 +113,33 @@ void printElse(int* PC, BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
     }
     printf("\n");
     printData(bh);
-    printf("==> addr: %-5u: %s\n", *PC, instruction_assembly_form(memory.instrs[(*PC % 4)]));
+    printf("%8d: %-4d", bh.stack_bottom_addr, 0);
+    printf("\t...\n");
+    printf("==> addr:%5d %s\n", PC, instruction_assembly_form(memory.instrs[PC/4]));
 }
 
-void initGPR(BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
-    GPR[28] = bh->data_start_address;
-    GPR[29] = bh->stack_bottom_addr;
-    GPR[30] = bh->stack_bottom_addr;
+void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
+    for(int i = 0; i < 32; i++)
+    {
+        GPR[i] = 0;
+    }
+    GPR[28] = bh.data_start_address;
+    GPR[29] = bh.stack_bottom_addr;
+    GPR[30] = bh.stack_bottom_addr;
 }
 
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS]){
-     *PC += 4;
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace){
+    *PC += 4;
      int64_t result;
      instr_type it = instruction_type(instr);
-     printf("%d\n", it);
      switch(it){
           case syscall_instr_type:
             switch (instr.syscall.code){
-
                 case exit_sc:
                     exit(0);
                 break;
                 case print_str_sc:
-                    
+                    GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
                 break;
                 case print_char_sc:
                     GPR[2] = fputc(GPR[4], stdout);
@@ -135,12 +148,11 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     GPR[2] = getc(stdin);
                 break;
                 case start_tracing_sc:
-
+                    *trace = 1;
                 break;
                 case stop_tracing_sc:
-                
+                    *trace = 0;
                 break;
-
             }
           break;
           case reg_instr_type:
@@ -195,19 +207,19 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                         exit(0);
                         break;
                         case print_str_sc:
-
+                            GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
                         break;
                         case print_char_sc:
-
+                            GPR[2] = fputc(GPR[4], stdout);
                         break;
                         case read_char_sc:
-
+                            GPR[2] = getc(stdin);
                         break;
                         case start_tracing_sc:
-
+                            *trace = 1;
                         break;
                         case stop_tracing_sc:
-
+                            *trace = 0;
                         break;
                    }
               break;
