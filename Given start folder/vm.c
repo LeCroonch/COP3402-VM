@@ -18,11 +18,11 @@ static union mem_u
      bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
-const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR);
-void storeInstrs(BOFHeader* bh0,char* fileName);
-void storeData(char* fileName);
 void printData(BOFHeader* bh);
-void printElse(int* PC, BOFHeader* bh, word_type* GPR);
+void storeInstrs(BOFHeader* bh0,char* fileName);
+void printElse(int* PC, BOFHeader* bh, word_type GPR[NUM_REGISTERS]);
+void initGPR(BOFHeader* bh, word_type GPR[NUM_REGISTERS]);
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS]);
 
 int main(int argc, char * argv[]){
 
@@ -47,15 +47,13 @@ int main(int argc, char * argv[]){
      } else {
 
          storeInstrs(&bh, argv[1]);
+         initGPR(&bh, GPR);
 
-         for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
-             instructionCycle(memory.instrs[i], &PC, &HI, &LO, &GPR);
-             printElse(&PC, &bh, &GPR);
+         for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
+             printElse(&PC, &bh, GPR);
+             instructionCycle(memory.instrs[i], &PC, &HI, &LO, GPR);
          }
-               
      }
-
-
 }
 
 void printData(BOFHeader* bh){
@@ -96,7 +94,7 @@ void storeInstrs(BOFHeader* bhptr,char* fileName){
     }
 }
 
-void printElse(int* PC, BOFHeader* bh, word_type* GPR){
+void printElse(int* PC, BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
     printf("%8s: %d\n", "PC", *PC);
     for(int i = 0; i < 32; i++){
         if(i != 0 && i % 6 == 0){
@@ -104,14 +102,20 @@ void printElse(int* PC, BOFHeader* bh, word_type* GPR){
         }
         printf("GPR[%-3s]: %-6d", regname_get(i), GPR[i]);
     }
+    printf("\n");
     printData(bh);
     printf("==> addr: %-5u: %s\n", *PC, instruction_assembly_form(memory.instrs[(*PC % 4)]));
 }
 
-const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type* GPR){
+void initGPR(BOFHeader* bh, word_type GPR[NUM_REGISTERS]){
+    GPR[28] = bh->data_start_address;
+    GPR[29] = bh->stack_bottom_addr;
+    GPR[30] = bh->stack_bottom_addr;
+}
+
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS]){
      *PC += 4;
-     char *buf;
-     unsigned result;
+     int result;
      instr_type it = instruction_type(instr);
      printf("%d\n", it);
      switch(it){
@@ -150,19 +154,19 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
               break;
               case MUL_F:
                   result = (GPR[instr.reg.rs]) * (GPR[instr.reg.rt]);
-                  HI = result >> 32;
-                  LO = result & 0xFFFFFFFF;
+                  *HI = result >> 32;
+                  *LO = result & 0xFFFFFFFF;
               break;
 
               case DIV_F:
-                   HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
-                   LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
+                   *HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
+                   *LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
               break;
               case MFHI_F:
-                   GPR[instr.reg.rd] = HI;
+                   GPR[instr.reg.rd] = *HI;
               break;
               case MFLO_F:
-                   GPR[instr.reg.rd] = LO;
+                   GPR[instr.reg.rd] = *LO;
               break;
               case AND_F:
                    GPR[instr.reg.rd] = (GPR[instr.reg.rs]) && (GPR[instr.reg.rt]);
@@ -183,7 +187,7 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                    GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]));
               break;
               case JR_F:
-                   PC = GPR[instr.reg.rs];
+                   *PC = GPR[instr.reg.rs];
               break;
               case SYSCALL_F:
                    switch (instr.reg.op){
@@ -227,32 +231,32 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
                       break;
                   case BEQ_O:
                     if(GPR[instr.immed.rs] == GPR[instr.immed.rt]){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case BGEZ_O:
                     if(GPR[instr.immed.rs] >= 0){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case BGTZ_O:
                     if(GPR[instr.immed.rs] > 0){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case BLEZ_O:
                     if(GPR[instr.immed.rs] <= 0){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case BLTZ_O:
                     if(GPR[instr.immed.rs] < 0){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case BNE_O:
                     if(GPR[instr.immed.rs] != GPR[instr.immed.rt]){
-                        PC = PC + machine_types_formOffset(instr.immed.immed);
+                        *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
                       break;
                   case LBU_O:
@@ -272,19 +276,15 @@ const char *instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_
           case jump_instr_type:
               switch(instr.jump.op){
                   case JMP_O:
-                    PC = machine_types_formAddress(PC, instr.jump.addr);
+                    *PC = machine_types_formAddress(*PC, instr.jump.addr);
                       break;
                   case JAL_O:
-                    GPR[31] = PC;
-                    PC = machine_types_formAddress(PC, instr.jump.addr);
+                    GPR[31] = *PC;
+                    *PC = machine_types_formAddress(*PC, instr.jump.addr);
                       break;
               }
           break;
           default:
           bail_with_error("Unknown instruction type (%d) in instruction_assembly_form!", it);
-
-          return buf;
      }
-
-   
 }
