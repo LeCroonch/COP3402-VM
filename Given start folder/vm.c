@@ -18,9 +18,9 @@ static union mem_u
      bin_instr_t instrs[MEMORY_SIZE_IN_WORDS];
 } memory;
 
-void printData(BOFHeader bh);
+void printData(int start, int end, word_type GPR[NUM_REGISTERS]);
 void storeInstrs(BOFHeader* bh0, char* fileName);
-void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO);
+void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO);
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace);
 int main(int argc, char * argv[]){
@@ -40,47 +40,53 @@ int main(int argc, char * argv[]){
                printf("%4d %s\n", PC, instruction_assembly_form(memory.instrs[i]));
                PC = PC + 4;
          }
-         printData(bh);
-
+         initGPR(bh, GPR);
+         printData(28, 29, GPR);
 
      } else {
 
          storeInstrs(&bh, argv[1]);
          initGPR(bh, GPR);
-         printElse(PC,bh,GPR,HI,LO);
+         printElse(PC,GPR,HI,LO);
          for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
              instructionCycle(memory.instrs[PC/4], &PC, &HI, &LO, GPR, &trace);
              if(trace == 1)
              {
-                 printElse(PC, bh, GPR, HI, LO);
+                 printElse(PC, GPR, HI, LO);
              }
          }
          printf("\n");
      }
 }
-
-void printData(BOFHeader bh){
+void printData(int start, int end, word_type GPR[NUM_REGISTERS]){
+    int newLine = 0;
     bool noDots = true;
-    
-    for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i += 4){
+    printf("\n");
+    for(int i = GPR[start]; i <= GPR[end]; i += 4){
         if(memory.words[i] != 0){
-            if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
+            if(newLine % 5 == 0 && i != GPR[start]){
                 printf("\n");
             }
             printf("%8d: %-4d", i, memory.words[i]);
+            newLine++;
+            noDots = true;
         }else if(noDots){
-            if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
+            if (newLine % 5 == 0 && i != GPR[start]) {
                 printf("\n");
             }
-                printf("%8d: %-4d", i, 0);
-                printf("\t...\n");
-                noDots = false;
+            printf("%8d: %-4d", i, memory.words[i]);
+            printf("\t...");
+            newLine++;
+            noDots = false;
+            if(start == 28)
+            {
+                break;
+            }
         }else{
 
         }
     }
 }
-
 
 void storeInstrs(BOFHeader* bhptr, char* fileName){
     BOFFILE bf = bof_read_open(fileName);
@@ -94,12 +100,10 @@ void storeInstrs(BOFHeader* bhptr, char* fileName){
     
     for(int i = 0; i < bh.data_length; i +=4){
         memory.words[bh.data_start_address + i] = bof_read_word(bf);
-
-          
     }
 }
 
-void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO){
+void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO){
     if(HI > 0 || LO > 0)
     {
         printf("%8s: %d %8s: %d %8s: %d\n", "PC", PC, "HI", HI, "LO", LO);
@@ -114,10 +118,9 @@ void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int L
         printf("GPR[%-3s]: %-6d", regname_get(i), GPR[i]);
     }
     printf("\n");
-    printData(bh);
-    printf("%8d: %-4d", bh.stack_bottom_addr, 0);
-    printf("\t...\n");
-    printf("==> addr:%5d %s\n", PC, instruction_assembly_form(memory.instrs[PC/4]));
+    printData(28, 29, GPR);
+    printData(29, 30, GPR);
+    printf("\n==> addr:%5d %s\n", PC, instruction_assembly_form(memory.instrs[PC/4]));
 }
 
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
