@@ -22,8 +22,7 @@ void printData(BOFHeader bh);
 void storeInstrs(BOFHeader* bh0, char* fileName);
 void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO);
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh);
-extern void jumpAndLink(int* PC, bin_instr_t instr, word_type GPR[NUM_REGISTERS], BOFHeader bh, int HI, int LO, int trace);
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace);
 int main(int argc, char * argv[]){
     int trace = 1;
      int PC = 0;
@@ -50,7 +49,7 @@ int main(int argc, char * argv[]){
          initGPR(bh, GPR);
          printElse(PC,bh,GPR,HI,LO);
          for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
-             instructionCycle(memory.instrs[PC/4], &PC, &HI, &LO, GPR, &trace, bh);
+             instructionCycle(memory.instrs[PC/4], &PC, &HI, &LO, GPR, &trace);
              if(trace == 1)
              {
                  printElse(PC, bh, GPR, HI, LO);
@@ -131,7 +130,7 @@ void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
     GPR[30] = bh.stack_bottom_addr;
 }
 
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh){
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace){
     *PC += 4;
      int64_t result;
      instr_type it = instruction_type(instr);
@@ -140,7 +139,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
             switch (instr.syscall.code){
                 case exit_sc:
                     exit(0);
-                break;
                 case print_str_sc:
                     GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
                 break;
@@ -160,7 +158,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
           break;
           case reg_instr_type:
           switch (instr.reg.func){
-               
               case ADD_F:
                   GPR[instr.reg.rd] = GPR[instr.reg.rs] + GPR[instr.reg.rt];
               break;
@@ -172,7 +169,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                   *HI = result >> 32;
                   *LO = result & 0xFFFFFFFF;
               break;
-
               case DIV_F:
                    *HI = GPR[instr.reg.rs] % GPR[instr.reg.rt];
                    *LO = GPR[instr.reg.rs] / GPR[instr.reg.rt];
@@ -208,7 +204,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                    switch (instr.reg.op){
                         case exit_sc:
                         exit(0);
-                        break;
                         case print_str_sc:
                             GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
                         break;
@@ -231,7 +226,7 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
           case immed_instr_type:
               switch (instr.immed.op){
                   case REG_O:
-                      break;;
+                      break;
                   case ADDI_O:
                     GPR[instr.immed.rt] = GPR[instr.immed.rs] + machine_types_sgnExt(instr.immed.immed);
                   break;
@@ -275,7 +270,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     }
                       break;
                   case LBU_O:
-                    
                     GPR[instr.immed.rt] = machine_types_zeroExt(memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)]);
                       break;
                   case LW_O:
@@ -303,7 +297,4 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
           default:
           bail_with_error("Unknown instruction type (%d) in instruction_assembly_form!", it);
      }
-   
-    
-         
 }
