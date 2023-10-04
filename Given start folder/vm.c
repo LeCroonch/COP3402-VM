@@ -49,7 +49,8 @@ int main(int argc, char * argv[]){
          storeInstrs(&bh, argv[1]);
          initGPR(bh, GPR);
          printElse(PC,GPR,HI,LO);
-         for(int i = 0; i < bh.text_length/BYTES_PER_WORD; i++){
+         
+         while(1){
              instructionCycle(memory.instrs[PC/4], &PC, &HI, &LO, GPR, &trace);
              if(trace == 1)
              {
@@ -135,6 +136,7 @@ void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
 }
 
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace){
+   
     *PC += 4;
      int64_t result;
      instr_type it = instruction_type(instr);
@@ -143,6 +145,7 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
             switch (instr.syscall.code){
                 case exit_sc:
                     exit(0);
+                break;
                 case print_str_sc:
                     GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
                 break;
@@ -224,8 +227,9 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                             *trace = 0;
                         break;
                    }
-              break;
-          }
+                    break;
+                }
+                break;
           case immed_instr_type:
               switch (instr.immed.op){
                   case REG_O:
@@ -273,16 +277,16 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     }
                       break;
                   case LBU_O:
-                    GPR[instr.immed.rt] = machine_types_zeroExt(memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)]);
+                    GPR[instr.immed.rt] = machine_types_zeroExt(memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))]);
                       break;
                   case LW_O:
-                    GPR[instr.immed.rt] = memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)];
+                    GPR[instr.immed.rt] = memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))];
                       break;
                   case SB_O:
-                    memory.bytes[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)] = GPR[instr.immed.rt];
+                    memory.bytes[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))] = GPR[instr.immed.rt];
                       break;
                   case SW_O:
-                    memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)] = GPR[instr.immed.rt];
+                    memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))] = GPR[instr.immed.rt];
                       break;
               }
           break;
@@ -298,6 +302,10 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
               }
           break;
           default:
-          bail_with_error("Unknown instruction type (%d) in instruction_assembly_form!", it);
-     }
+            bail_with_error("Unknown instruction type (%d) in instruction_assembly_form!", it);
+          break;
+        } 
+         
+    
+    
 }
