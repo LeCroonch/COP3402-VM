@@ -62,18 +62,18 @@ int main(int argc, char * argv[]){
 
 void printData(BOFHeader bh){
     bool noDots = true;
-    int currAdd;
-    for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i++){
+    
+    for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i += 4){
         if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
             printf("\n");
         }
         if(memory.words[i] != 0){
-            currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
-            printf("%8d: %-4d", currAdd, memory.words[i]);
+           
+            printf("%8d: %-4d", i, memory.words[i]);
         }else if(memory.words[i] == 0){
-            currAdd = bh.data_start_address + (4 * (i-bh.data_start_address));
+            
             if(noDots){
-                printf("%8d: %-4d", currAdd, 0);
+                printf("%8d: %-4d", i, 0);
                 printf("\t...\n");
                 noDots = false;
             }else{
@@ -92,9 +92,11 @@ void storeInstrs(BOFHeader* bhptr, char* fileName){
         bin_instr_t bi = instruction_read(bf);
         memory.instrs[i] = bi;
     }
-
-    for(int i = 0; i < bh.data_length/BYTES_PER_WORD; i++){
+    
+    for(int i = 0; i < bh.data_length; i +=4){
         memory.words[bh.data_start_address + i] = bof_read_word(bf);
+
+          
     }
 }
 
@@ -273,7 +275,8 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     }
                       break;
                   case LBU_O:
-                    GPR[instr.immed.rt] = machine_types_zeroExt(memory.bytes[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)]);
+                    
+                    GPR[instr.immed.rt] = machine_types_zeroExt(memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)]);
                       break;
                   case LW_O:
                     GPR[instr.immed.rt] = memory.words[GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed)];
