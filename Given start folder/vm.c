@@ -63,24 +63,24 @@ void printData(BOFHeader bh){
     bool noDots = true;
     
     for(int i = bh.data_start_address; i < bh.stack_bottom_addr; i += 4){
-        if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
-            printf("\n");
-        }
         if(memory.words[i] != 0){
-           
+            if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
+                printf("\n");
+            }
             printf("%8d: %-4d", i, memory.words[i]);
-        }else if(memory.words[i] == 0){
-            
-            if(noDots){
+        }else if(noDots){
+            if((i - bh.data_start_address) != 0 && (i - bh.data_start_address) % 5 == 0){
+                printf("\n");
+            }
                 printf("%8d: %-4d", i, 0);
                 printf("\t...\n");
                 noDots = false;
-            }else{
-                break;
-            }
+        }else{
+
         }
     }
 }
+
 
 void storeInstrs(BOFHeader* bhptr, char* fileName){
     BOFFILE bf = bof_read_open(fileName);
