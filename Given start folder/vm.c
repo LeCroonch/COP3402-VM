@@ -23,6 +23,7 @@ void storeInstrs(BOFHeader* bh0, char* fileName);
 void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO);
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace);
+
 int main(int argc, char * argv[]){
     int trace = 1;
      int PC = 0;
@@ -58,20 +59,20 @@ int main(int argc, char * argv[]){
          printf("\n");
      }
 }
+
 void printData(int start, int end, word_type GPR[NUM_REGISTERS]){
     int newLine = 0;
     bool noDots = true;
-    printf("\n");
     for(int i = GPR[start]; i <= GPR[end]; i += 4){
         if(memory.words[i] != 0){
-            if(newLine % 5 == 0 && i != GPR[start]){
+            if(newLine % 5 == 0){
                 printf("\n");
             }
             printf("%8d: %-4d", i, memory.words[i]);
             newLine++;
             noDots = true;
         }else if(noDots){
-            if (newLine % 5 == 0 && i != GPR[start]) {
+            if (newLine % 5 == 0) {
                 printf("\n");
             }
             printf("%8d: %-4d", i, memory.words[i]);
@@ -224,7 +225,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                         break;
                    }
               break;
-
           }
           case immed_instr_type:
               switch (instr.immed.op){
