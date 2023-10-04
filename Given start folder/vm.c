@@ -182,22 +182,22 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                    GPR[instr.reg.rd] = *LO;
               break;
               case AND_F:
-                   GPR[instr.reg.rd] = (GPR[instr.reg.rs]) && (GPR[instr.reg.rt]);
+                   GPR[instr.reg.rd] = (GPR[instr.reg.rs]) & (GPR[instr.reg.rt]);
               break;
               case BOR_F:
-                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]));
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) | (GPR[instr.reg.rt]));
               break;
               case NOR_F:
-                   GPR[instr.reg.rd] = !((GPR[instr.reg.rs]) || (GPR[instr.reg.rt]));
+                   GPR[instr.reg.rd] = !((GPR[instr.reg.rs]) | (GPR[instr.reg.rt]));
               break;
               case XOR_F:
                    GPR[instr.reg.rd] = ((GPR[instr.reg.rs]) ^ (GPR[instr.reg.rt])); 
               break;
               case SLL_F:
-                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) << (GPR[instr.reg.shift]));
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) << (instr.reg.shift));
               break;
               case SRL_F:
-                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]));
+                   GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (instr.reg.shift));
               break;
               case JR_F:
                    *PC = GPR[instr.reg.rs];
