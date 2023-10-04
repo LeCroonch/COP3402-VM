@@ -22,8 +22,8 @@ void printData(BOFHeader bh);
 void storeInstrs(BOFHeader* bh0, char* fileName);
 void printElse(int PC, BOFHeader bh, word_type GPR[NUM_REGISTERS], int HI, int LO);
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh);
-extern void jumpAndLink(int PC, bin_instr_t instr, word_type GPR[NUM_REGISTERS], BOFHeader bh, int HI, int LO);
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh, int i);
+extern void jumpAndLink(int PC, bin_instr_t instr, word_type GPR[NUM_REGISTERS], BOFHeader bh, int HI, int LO, int trace);
 int main(int argc, char * argv[]){
     int trace = 1;
      int PC = 0;
@@ -55,7 +55,7 @@ int main(int argc, char * argv[]){
                  printElse(PC, bh, GPR, HI, LO);
              }
              
-             instructionCycle(memory.instrs[i], &PC, &HI, &LO, GPR, &trace, bh);
+             instructionCycle(memory.instrs[i], &PC, &HI, &LO, GPR, &trace, bh, i);
              
              }
          printf("\n");
@@ -131,14 +131,10 @@ void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
     GPR[30] = bh.stack_bottom_addr;
 }
 
-void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh){
+void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace, BOFHeader bh, int i){
     *PC += 4;
      int64_t result;
      instr_type it = instruction_type(instr);
-     printf("instr.syscall.code %d\n", instr.syscall.code);
-     printf("instr.reg.func %d\n", instr.reg.func);
-     printf("instr.immed.op %d\n", instr.immed.op);
-     printf("instr.jump.op %d\n", instr.jump.op);
      switch(it){
           case syscall_instr_type:
             switch (instr.syscall.code){
@@ -206,7 +202,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                    GPR[instr.reg.rd] = ((GPR[instr.reg.rt]) >> (GPR[instr.reg.shift]));
               break;
               case JR_F:
-                    printf("GPR 31 = (%d)\n", GPR[instr.reg.rs]);
                    *PC = GPR[instr.reg.rs];
               break;
               case SYSCALL_F:
@@ -299,8 +294,7 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     *PC = machine_types_formAddress(*PC, instr.jump.addr);
                       break;
                   case JAL_O:
-                    jumpAndLink(*PC, instr, GPR, bh, HI, LO);
-                    printf("GRP[31] = %d\n", GPR[31]);
+                    jumpAndLink(*PC, instr, GPR, bh, *HI, *LO, *trace);
                       break;
               }
           break;
@@ -312,8 +306,13 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
          
 }
 
-extern void jumpAndLink(int PC, bin_instr_t instr, word_type GPR[NUM_REGISTERS], BOFHeader bh, int HI, int LO){
+extern void jumpAndLink(int PC, bin_instr_t instr, word_type GPR[NUM_REGISTERS], BOFHeader bh, int HI, int LO, int trace){
     GPR[31] = PC;
     PC = machine_types_formAddress(PC, instr.jump.addr);
     printElse(PC, bh, GPR, HI, LO);
+    
+    
+    PC+= 4;
+    printElse(PC, bh, GPR, HI, LO);
+    PC = GPR[instr.reg.rs];
 }
