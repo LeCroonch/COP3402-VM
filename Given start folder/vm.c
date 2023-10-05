@@ -23,16 +23,17 @@ void storeInstrs(BOFHeader* bh0, char* fileName);
 void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO);
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]);
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace);
+void SystemHelper(bin_instr_t instr, word_type GPR[NUM_REGISTERS], int* trace);
 
 int main(int argc, char * argv[]){
-    int trace = 1;
-     int PC = 0;
+    int trace = 1; // 1 (Trace On) 0 (Trace Off)
+     int PC = 0; // Program Counter
      BOFHeader bh;
-     word_type GPR[NUM_REGISTERS];
-     int HI = 0;
+     word_type GPR[NUM_REGISTERS]; // Registers
+     int HI = 0; 
      int LO = 0;
  
-     if(strcmp(argv[1], "-p") == 0){
+     if(strcmp(argv[1], "-p") == 0){ //If -p present 
 
          storeInstrs(&bh ,argv[2]);
 
@@ -44,13 +45,13 @@ int main(int argc, char * argv[]){
          initGPR(bh, GPR);
          printData(28, 29, GPR);
 
-     } else {
+     } else { // Other cases
 
          storeInstrs(&bh, argv[1]);
          initGPR(bh, GPR);
          printElse(PC,GPR,HI,LO);
          
-         while(1){
+         while(1){ //Infinite loop of program cycle until Exit called
              instructionCycle(memory.instrs[PC/4], &PC, &HI, &LO, GPR, &trace);
              if(trace == 1)
              {
@@ -138,9 +139,9 @@ void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace){
    
     *PC += 4;
-     int64_t result;
-     instr_type it = instruction_type(instr);
-     switch(it){
+    int64_t result;
+    instr_type it = instruction_type(instr);
+    switch(it){
           case syscall_instr_type:
             switch (instr.syscall.code){
                 case exit_sc:
@@ -208,6 +209,8 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                    *PC = GPR[instr.reg.rs];
               break;
               case SYSCALL_F:
+                SystemHelper(instr, GPR, trace);
+                /*
                    switch (instr.reg.op){
                         case exit_sc:
                         exit(0);
@@ -228,6 +231,7 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                         break;
                    }
                     break;
+                    */
                 }
                 break;
           case immed_instr_type:
@@ -250,55 +254,55 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
                     if(GPR[instr.immed.rs] == GPR[instr.immed.rt]){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case BGEZ_O:
                     if(GPR[instr.immed.rs] >= 0){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case BGTZ_O:
                     if(GPR[instr.immed.rs] > 0){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case BLEZ_O:
                     if(GPR[instr.immed.rs] <= 0){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case BLTZ_O:
                     if(GPR[instr.immed.rs] < 0){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case BNE_O:
                     if(GPR[instr.immed.rs] != GPR[instr.immed.rt]){
                         *PC = *PC + machine_types_formOffset(instr.immed.immed);
                     }
-                      break;
+                    break;
                   case LBU_O:
                     GPR[instr.immed.rt] = machine_types_zeroExt(memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))]);
-                      break;
+                    break;
                   case LW_O:
                     GPR[instr.immed.rt] = memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))];
-                      break;
+                    break;
                   case SB_O:
                     memory.bytes[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))] = GPR[instr.immed.rt];
-                      break;
+                    break;
                   case SW_O:
                     memory.words[(GPR[instr.immed.rs] + machine_types_formOffset(instr.immed.immed))] = GPR[instr.immed.rt];
-                      break;
+                    break;
               }
           break;
           case jump_instr_type:
               switch(instr.jump.op){
-                  case JMP_O:
+                case JMP_O:
                     *PC = machine_types_formAddress(*PC, instr.jump.addr);
-                      break;
+                    break;
                   case JAL_O:
-                      GPR[31] = *PC;
-                      *PC = machine_types_formAddress(*PC, instr.jump.addr);
-                      break;
+                    GPR[31] = *PC;
+                    *PC = machine_types_formAddress(*PC, instr.jump.addr);
+                    break;
               }
           break;
           default:
@@ -308,4 +312,26 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
          
     
     
+}
+
+void SystemHelper(bin_instr_t instr, word_type GPR[NUM_REGISTERS], int* trace){
+    switch (instr.reg.op){
+        case exit_sc:
+            exit(0);
+        case print_str_sc:
+            GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);
+        break;
+        case print_char_sc:
+            GPR[2] = fputc(GPR[4], stdout);
+        break;
+        case read_char_sc:
+            GPR[2] = getc(stdin);
+        break;
+        case start_tracing_sc:
+            *trace = 1;
+        break;
+        case stop_tracing_sc:
+            *trace = 0;
+        break;
+    }
 }
