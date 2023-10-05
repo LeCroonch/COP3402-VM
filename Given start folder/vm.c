@@ -12,6 +12,7 @@
 #define MEMORY_SIZE_IN_BYTES (65536 - BYTES_PER_WORD)
 #define MEMORY_SIZE_IN_WORDS (MEMORY_SIZE_IN_BYTES / BYTES_PER_WORD)
 
+// VM memory
 static union mem_u
 {
      byte_type bytes[MEMORY_SIZE_IN_BYTES];
@@ -60,10 +61,10 @@ int main(int argc, char * argv[]){
                  printElse(PC, GPR, HI, LO);
              }
          }
-         printf("\n");
      }
 }
 
+// Function for printing the data section of the BOF
 void printData(int start, int end, word_type GPR[NUM_REGISTERS]){
     int newLine = 0;
     bool noDots = true;
@@ -93,6 +94,7 @@ void printData(int start, int end, word_type GPR[NUM_REGISTERS]){
     }
 }
 
+// Function to read and load the instructions and data from the BOF to the VM
 void storeInstrs(BOFHeader* bhptr, char* fileName){
     BOFFILE bf = bof_read_open(fileName);
     BOFHeader bh = bof_read_header(bf);
@@ -110,6 +112,7 @@ void storeInstrs(BOFHeader* bhptr, char* fileName){
     }
 }
 
+// Function to print the table when not having the -p flag
 void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO){
      //if HI and LO are greater than 0 print them, else print PC 
     if(HI > 0 || LO > 0)
@@ -132,6 +135,7 @@ void printElse(int PC, word_type GPR[NUM_REGISTERS], int HI, int LO){
     printf("\n==> addr:%5d %s\n", PC, instruction_assembly_form(memory.instrs[PC/4]));
 }
 
+// Function to initialize the GPRs
 void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
     for(int i = 0; i < 32; i++)
     {
@@ -143,6 +147,7 @@ void initGPR(BOFHeader bh, word_type GPR[NUM_REGISTERS]){
     GPR[30] = bh.stack_bottom_addr;
 }
 
+// Function to identify and execute the instructions
 void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GPR[NUM_REGISTERS], int* trace){
    
     *PC += 4;
@@ -153,7 +158,6 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
             switch (instr.syscall.code){
                 case exit_sc:
                     exit(0);//exit
-                break;
                 case print_str_sc:
                     GPR[2] = printf("%s\n", &memory.bytes[GPR[4]]);//print string
                 break;
@@ -299,6 +303,7 @@ void instructionCycle(bin_instr_t instr, int *PC, int *HI, int *LO, word_type GP
     
 }
 
+// Function to avoid repetitive code
 void SystemHelper(bin_instr_t instr, word_type GPR[NUM_REGISTERS], int* trace){
     switch (instr.reg.op){
         case exit_sc:
