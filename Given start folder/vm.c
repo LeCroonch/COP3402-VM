@@ -1,3 +1,4 @@
+//COP3402 Group 48 - Louis Au, Justin Rimmeli, Alejandro Fernandez
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
